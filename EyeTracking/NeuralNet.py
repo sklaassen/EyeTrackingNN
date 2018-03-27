@@ -8,19 +8,23 @@ import os
 
 ImageClump = glob.glob(".\Images\*.jpg")
 Images = np.zeros((len(ImageClump),28*28),dtype=np.float32)
-labels = np.zeros((len(ImageClump),4),dtype=np.float32)
+labels = np.zeros((len(ImageClump),9),dtype=np.float32)
 count = 0
 for inFile in ImageClump:
     image = np.asarray(Image.open(inFile)).flatten()
     Images[count,:] = image[:]
-    print(np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:4])
-    #labels[count,:] = np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:3])
+    #print(np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:9])
+    labels[count,:] = np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:9]
     count+=1
 
-print(Images)
+#print(Images)
+trainImages = Images[300:,:]
+testImages = Images[:300,:]
+trainLabels = labels[300:,:]
+testLabels = labels[:300,:]
 
 batch_size = 128
-n_classes = 4 # MNIST total classes (0-9 digits)
+n_classes = 9
 
 # tf Graph input
 x = tf.placeholder(tf.float32, [None, 28*28])
@@ -49,9 +53,7 @@ def create_new_conv_layer(input_data, num_input_channels, num_filters, filter_sh
     # now perform max pooling
     ksize = [1, pool_shape[0], pool_shape[1], 1]
     strides = [1, 2, 2, 1]
-    out_layer = tf.nn.max_pool(out_layer, ksize=ksize, strides=strides,
-                               padding='SAME')
-
+    out_layer = tf.nn.max_pool(out_layer, ksize=ksize, strides=strides,padding='SAME')
     return out_layer
 
 layer1 = create_new_conv_layer(x_shaped, 1, 32, [5, 5], [2, 2], name='layer1')
@@ -60,10 +62,12 @@ fc = tf.reshape(layer2, [-1, 7*7*64])
 
 wd1 = tf.Variable(tf.truncated_normal([7 * 7 * 64, 1000], stddev=0.03), name='wd1')
 bd1 = tf.Variable(tf.truncated_normal([1000], stddev=0.01), name='bd1')
+
 wd2 = tf.Variable(tf.truncated_normal([1000, n_classes], stddev=0.03), name='wd2')
 bd2 = tf.Variable(tf.truncated_normal([n_classes], stddev=0.01), name='bd2')
 
 fc = tf.nn.relu(tf.matmul(fc, wd1) + bd1)
+#output = tf.nn.softmax(tf.matmul(fc, wd2) + bd2)
 output = tf.matmul(fc, wd2) + bd2
 
 
@@ -74,14 +78,19 @@ correct = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1))
 
 accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
 
-hm_epochs = 10
+hm_epochs = 100
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     for epoch in range(hm_epochs):
-        _, epoch_loss = sess.run([optimizer,accuracy], feed_dict={x: Images[200:,:], y: labels[200:,:]})
+        totcost = 0
+        for batch in range(0,len(trainImages),batch_size):
+            _, epoch_loss = sess.run([optimizer,cost], feed_dict={x: trainImages[batch:batch+batch_size,:], y: trainLabels[batch:batch+batch_size,:]})
+            totcost += epoch_loss
+        train_acc = sess.run(accuracy, feed_dict={x: trainImages, y: trainLabels})
+        test_acc = sess.run(accuracy, feed_dict={x: testImages, y: testLabels})
 
-        print('Epoch', epoch, 'completed out of',hm_epochs,'loss:',epoch_loss)
+        print('Epoch', epoch, '/',hm_epochs,' acc1:',train_acc,'cost: ',totcost,' acc2: ',test_acc)
 
 
-    print('Accuracy:',sess.run(accuracy,feed_dict={x:Images[:200,:], y:labels[:200,:]}))
+    print('Accuracy:',sess.run(accuracy,feed_dict={x: testImages, y: testLabels}))

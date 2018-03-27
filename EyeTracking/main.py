@@ -14,8 +14,9 @@ TEXTCOLOR = (  0,   0,  0)
 
 running = True
 #up down left right
-directions = {'up':0,'down':0,'left':0,'right':0}
+directions = {'l':0,'lu':0,'u':0,'ru':0,'r':0,'rd':0,'d':0,'ld':0,'c':0}
 lewayPercent = 33/2
+
 def main():
 	delayTime = 0.01
 	nextTime = time.time()
@@ -68,31 +69,50 @@ def main():
 				dest = (dest+1)%len(locks)
 			for (x, y, w, h) in faces:
 				cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-				gray = gray[y:y+h, x:x+w]
+				gray = gray[y+10:y+h-10, x+10:x+w-10]
 				gray = cv2.resize(gray,(28,28))
+				for index in directions:
+					directions[index] = 0
 
 				if pos[0] <width/2-width*(1/lewayPercent):
-					directions['left'] = 1
-					directions["right"] = 0
+					#left
+					if pos[1] <height/2-height*(1/lewayPercent):
+						#up
+						directions['lu'] = 1
+					elif pos[0] >height/2+height*(1/lewayPercent):
+						#down
+						directions['ld'] = 1
+					else:
+						#none
+						directions['l'] = 1
 				elif pos[0] >width/2+width*(1/lewayPercent):
-					directions['left'] = 0
-					directions["right"] = 1
+					#right
+					if pos[1] <height/2-height*(1/lewayPercent):
+						#up
+						directions['ru'] = 1
+					elif pos[0] >height/2+height*(1/lewayPercent):
+						#down
+						directions['rd'] = 1
+					else:
+						#none
+						directions['r'] = 1
 				else:
-					directions['left'] = 0
-					directions["right"] = 0
+					#none
+					if pos[1] <height/2-height*(1/lewayPercent):
+						#up
+						directions['u'] = 1
+					elif pos[0] >height/2+height*(1/lewayPercent):
+						#down
+						directions['d'] = 1
+					else:
+						#none
+						directions['c'] = 1
+				filename = "./Images/"
+				for index in directions:
+					filename = filename + str(directions[index]) + "_"
 
-				if pos[1] <height/2-height*(1/lewayPercent):
-					directions["up"] = 1
-					directions["down"] = 0
-				elif pos[0] >height/2+height*(1/lewayPercent):
-					directions["up"] = 0
-					directions["down"] = 1
-				else:
-					directions["up"] = 0
-					directions["down"] = 0
-
-				filename = str(directions['up'])+"_"+ str(directions['down'])+"_"+ str(directions['left'])+"_" +str(directions['right'])+"_"+ str(counter)
-				cv2.imwrite("./Images/" + filename + ".jpg",gray)
+				filename += str(counter)
+				cv2.imwrite(filename + ".jpg",gray)
 				counter = counter +1
 
 		pos = (locks[dest]-locks[curr])/maxStep*step+locks[curr]
