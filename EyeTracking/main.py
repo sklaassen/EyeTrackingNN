@@ -52,9 +52,9 @@ def main():
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				running = False
 
-		screen.fill(BLACK)        
-		
-        
+		screen.fill(BLACK)
+
+
 		cv2.imshow("preview", frame)
 		rval, frame = vc.read()
 		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -69,7 +69,7 @@ def main():
 			for (x, y, w, h) in faces:
 				cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 				gray = gray[y:y+h, x:x+w]
-				gray = cv2.resize(gray,(100,100))
+				gray = cv2.resize(gray,(28,28))
 
 				if pos[0] <width/2-width*(1/lewayPercent):
 					directions['left'] = 1
@@ -94,22 +94,21 @@ def main():
 				filename = str(directions['up'])+"_"+ str(directions['down'])+"_"+ str(directions['left'])+"_" +str(directions['right'])+"_"+ str(counter)
 				cv2.imwrite("./Images/" + filename + ".jpg",gray)
 				counter = counter +1
-						
+
 		pos = (locks[dest]-locks[curr])/maxStep*step+locks[curr]
 		pygame.draw.circle(screen, BLUE, pos, 20)
 
 
 
 		pygame.display.update()
-	
+
 
 
 	vc.release()
 	cv2.destroyAllWindows()
-	
-	#release is not actually stoping 
+
+	#release is not actually stoping
 	vc.stop()
 
 if __name__ == '__main__':
 	main()
-	

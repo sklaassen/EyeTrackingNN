@@ -1,12 +1,29 @@
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("/tmp/data/", one_hot = True)
+#from tensorflow.examples.tutorials.mnist import input_data
+#mnist = input_data.read_data_sets("/tmp/data/", one_hot = True)
+from PIL import Image
+import glob
+import numpy as np
+import os
+
+ImageClump = glob.glob(".\Images\*.jpg")
+Images = np.zeros((len(ImageClump),28*28),dtype=np.float32)
+labels = np.zeros((len(ImageClump),4),dtype=np.float32)
+count = 0
+for inFile in ImageClump:
+    image = np.asarray(Image.open(inFile)).flatten()
+    Images[count,:] = image[:]
+    print(np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:4])
+    #labels[count,:] = np.asarray(os.path.splitext(inFile)[0].split("\\")[2].split("_"))[:3])
+    count+=1
+
+print(Images)
 
 batch_size = 128
-n_classes = 10 # MNIST total classes (0-9 digits)
+n_classes = 4 # MNIST total classes (0-9 digits)
 
 # tf Graph input
-x = tf.placeholder(tf.float32, [None, 784])
+x = tf.placeholder(tf.float32, [None, 28*28])
 x_shaped = tf.reshape(x, [-1, 28, 28, 1])
 y = tf.placeholder(tf.float32, [None, n_classes])
 
@@ -32,7 +49,7 @@ def create_new_conv_layer(input_data, num_input_channels, num_filters, filter_sh
     # now perform max pooling
     ksize = [1, pool_shape[0], pool_shape[1], 1]
     strides = [1, 2, 2, 1]
-    out_layer = tf.nn.max_pool(out_layer, ksize=ksize, strides=strides, 
+    out_layer = tf.nn.max_pool(out_layer, ksize=ksize, strides=strides,
                                padding='SAME')
 
     return out_layer
@@ -43,8 +60,8 @@ fc = tf.reshape(layer2, [-1, 7*7*64])
 
 wd1 = tf.Variable(tf.truncated_normal([7 * 7 * 64, 1000], stddev=0.03), name='wd1')
 bd1 = tf.Variable(tf.truncated_normal([1000], stddev=0.01), name='bd1')
-wd2 = tf.Variable(tf.truncated_normal([1000, 10], stddev=0.03), name='wd2')
-bd2 = tf.Variable(tf.truncated_normal([10], stddev=0.01), name='bd2')
+wd2 = tf.Variable(tf.truncated_normal([1000, n_classes], stddev=0.03), name='wd2')
+bd2 = tf.Variable(tf.truncated_normal([n_classes], stddev=0.01), name='bd2')
 
 fc = tf.nn.relu(tf.matmul(fc, wd1) + bd1)
 output = tf.matmul(fc, wd2) + bd2
@@ -53,21 +70,18 @@ output = tf.matmul(fc, wd2) + bd2
 cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(labels=y,logits=output) )
 optimizer = tf.train.AdamOptimizer(0.0001).minimize(cost)
 
-hm_epochs = 10
+correct = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1))
 
+accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+
+hm_epochs = 10
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     for epoch in range(hm_epochs):
-        epoch_loss = 0
-        for _ in range(int(mnist.train.num_examples/batch_size)):
-            epoch_x, epoch_y = mnist.train.next_batch(batch_size)
-            _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, y: epoch_y})
-            epoch_loss += c
+        _, epoch_loss = sess.run([optimizer,accuracy], feed_dict={x: Images[200:,:], y: labels[200:,:]})
 
         print('Epoch', epoch, 'completed out of',hm_epochs,'loss:',epoch_loss)
 
-    correct = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1))
 
-    accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
-    print('Accuracy:',accuracy.eval({x:mnist.test.images, y:mnist.test.labels}))
+    print('Accuracy:',sess.run(accuracy,feed_dict={x:Images[:200,:], y:labels[:200,:]}))
