@@ -14,7 +14,8 @@ TEXTCOLOR = (  0,   0,  0)
 
 running = True
 #up down left right
-directions = {'l':0,'lu':0,'u':0,'ru':0,'r':0,'rd':0,'d':0,'ld':0,'c':0}
+#directions = {'l':0,'lu':0,'u':0,'ru':0,'r':0,'rd':0,'d':0,'ld':0,'c':0}
+directions = [0,0,0,0,0,0,0,0,0]
 lewayPercent = 33/2
 
 def main():
@@ -71,44 +72,43 @@ def main():
 				cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 				gray = gray[y+10:y+h-10, x+10:x+w-10]
 				gray = cv2.resize(gray,(28,28))
-				for index in directions:
-					directions[index] = 0
+				directions = [0,0,0,0,0,0,0,0,0]
 
 				if pos[0] <width/2-width*(1/lewayPercent):
 					#left
 					if pos[1] <height/2-height*(1/lewayPercent):
 						#up
-						directions['lu'] = 1
+						directions[1] = 1
 					elif pos[0] >height/2+height*(1/lewayPercent):
 						#down
-						directions['ld'] = 1
+						directions[7] = 1
 					else:
 						#none
-						directions['l'] = 1
+						directions[0] = 1
 				elif pos[0] >width/2+width*(1/lewayPercent):
 					#right
 					if pos[1] <height/2-height*(1/lewayPercent):
 						#up
-						directions['ru'] = 1
+						directions[3] = 1
 					elif pos[0] >height/2+height*(1/lewayPercent):
 						#down
-						directions['rd'] = 1
+						directions[5] = 1
 					else:
 						#none
-						directions['r'] = 1
+						directions[4] = 1
 				else:
 					#none
 					if pos[1] <height/2-height*(1/lewayPercent):
 						#up
-						directions['u'] = 1
+						directions[2] = 1
 					elif pos[0] >height/2+height*(1/lewayPercent):
 						#down
-						directions['d'] = 1
+						directions[6] = 1
 					else:
 						#none
-						directions['c'] = 1
+						directions[8] = 1
 				filename = "./Images/"
-				for index in directions:
+				for index in range(len(directions)):
 					filename = filename + str(directions[index]) + "_"
 
 				filename += str(counter)
