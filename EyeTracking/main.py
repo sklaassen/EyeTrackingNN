@@ -10,7 +10,7 @@ BLUE =      (  0,   0, 255)
 GREEN =     (  0, 255,   0)
 RED =       (255,   0,   0)
 TEXTCOLOR = (  0,   0,  0)
-(width, height) = (1366, 728)
+(width, height) = (1920, 1000)
 
 running = True
 #up down left right

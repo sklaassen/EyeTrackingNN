@@ -23,9 +23,7 @@ for inFile in ImageClump:
     count+=1
 
 #print(Images)
-shuffle = None
-ImageClump = None
-gc.collect()
+
 
 trainImages = Images[:trainToTestRatio,:]
 testImages = Images[trainToTestRatio:,:]
@@ -34,6 +32,14 @@ testLabels = labels[trainToTestRatio:,:]
 print("Total data Count:",len(ImageClump))
 print("Training data Count: " ,len(trainImages))
 print("Testing data Count: ",len(testImages))
+
+shuffle = None
+ImageClump = None
+Images = None
+labels = None
+gc.collect()
+
+
 batch_size = 20
 n_classes = 9
 
