@@ -11,7 +11,7 @@ BLUE =      (  0,   0, 255)
 GREEN =     (  0, 255,   0)
 RED =       (255,   0,   0)
 TEXTCOLOR = (  0,   0,  0)
-(width, height) = (1366, 728)
+(width, height) = (1920, 1000)
 directions = {'l':0,'lu':0,'u':0,'ru':0,'r':0,'rd':0,'d':0,'ld':0,'c':0}
 
 running = True

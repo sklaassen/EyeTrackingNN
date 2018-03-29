@@ -12,7 +12,8 @@ Images = np.zeros((len(ImageClump),ImageSize*ImageSize),dtype=np.float32)
 labels = np.zeros((len(ImageClump),9),dtype=np.float32)
 
 shuffle = np.random.permutation(len(ImageClump))
-trainToTestRatio = int(8/10*len(ImageClump))
+#limit ratio so as to be able to load all test data at once without having memmory issues (i dont want to batch test data)
+trainToTestRatio = max(int(8/10*len(ImageClump)),len(ImageClump)-350)
 
 count = 0
 for inFile in ImageClump:
@@ -40,7 +41,7 @@ labels = None
 gc.collect()
 
 
-batch_size = 20
+batch_size = 100
 n_classes = 9
 
 # tf Graph input
@@ -91,8 +92,8 @@ accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
 hm_epochs = 100
 saver = tf.train.Saver()
 with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    #saver.restore(sess,'/tmp/eyeTracker.ckpt')
+    #sess.run(tf.global_variables_initializer())
+    saver.restore(sess,'/tmp/eyeTracker.ckpt')
     for epoch in range(hm_epochs):
         totcost = 0
         batch_count = 0
@@ -102,10 +103,11 @@ with tf.Session() as sess:
             batch_count +=1
 
         saver.save(sess,'/tmp/eyeTracker.ckpt')
-        train_acc = sess.run(accuracy, feed_dict={x: trainImages, y: trainLabels})
+        #this is way too memmory intensive if the training Image size is large
+        #train_acc = sess.run(accuracy, feed_dict={x: trainImages, y: trainLabels})
         test_acc = sess.run(accuracy, feed_dict={x: testImages, y: testLabels})
 
-        print('Epoch', epoch, '/',hm_epochs,' acc1:',train_acc,'cost: ',totcost/batch_count,' acc2: ',test_acc)
+        print('Epoch', epoch, '/',hm_epochs,'cost: ',totcost/batch_count,' acc2: ',test_acc)
 
 
     print('Accuracy:',sess.run(accuracy,feed_dict={x: testImages, y: testLabels}))
