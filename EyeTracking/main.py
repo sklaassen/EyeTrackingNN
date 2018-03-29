@@ -71,7 +71,7 @@ def main():
 			for (x, y, w, h) in faces:
 				cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 				gray = gray[y+10:y+h-10, x+10:x+w-10]
-				gray = cv2.resize(gray,(28,28))
+				gray = cv2.resize(gray,(100,100))
 				directions = [0,0,0,0,0,0,0,0,0]
 
 				if pos[0] <width/2-width*(1/lewayPercent):

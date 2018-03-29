@@ -3,9 +3,12 @@ from PIL import Image
 import glob
 import numpy as np
 import os
+import gc
+
+ImageSize = 100
 
 ImageClump = glob.glob(".\Images\*.jpg")
-Images = np.zeros((len(ImageClump),28*28),dtype=np.float32)
+Images = np.zeros((len(ImageClump),ImageSize*ImageSize),dtype=np.float32)
 labels = np.zeros((len(ImageClump),9),dtype=np.float32)
 
 shuffle = np.random.permutation(len(ImageClump))
@@ -20,6 +23,10 @@ for inFile in ImageClump:
     count+=1
 
 #print(Images)
+shuffle = None
+ImageClump = None
+gc.collect()
+
 trainImages = Images[:trainToTestRatio,:]
 testImages = Images[trainToTestRatio:,:]
 trainLabels = labels[:trainToTestRatio,:]
@@ -27,12 +34,12 @@ testLabels = labels[trainToTestRatio:,:]
 print("Total data Count:",len(ImageClump))
 print("Training data Count: " ,len(trainImages))
 print("Testing data Count: ",len(testImages))
-batch_size = 128
+batch_size = 20
 n_classes = 9
 
 # tf Graph input
-x = tf.placeholder(tf.float32, [None, 28*28])
-x_shaped = tf.reshape(x, [-1, 28, 28, 1])
+x = tf.placeholder(tf.float32, [None, ImageSize*ImageSize])
+x_shaped = tf.reshape(x, [-1, ImageSize, ImageSize, 1])
 y = tf.placeholder(tf.float32, [None, n_classes])
 
 def create_new_conv_layer(input_data, num_input_channels, num_filters, filter_shape, pool_shape, name):
@@ -56,9 +63,9 @@ def create_new_conv_layer(input_data, num_input_channels, num_filters, filter_sh
 
 layer1 = create_new_conv_layer(x_shaped, 1, 32, [5, 5], [2, 2], name='layer1')
 layer2 = create_new_conv_layer(layer1, 32, 64, [5, 5], [2, 2], name='layer2')
-fc = tf.reshape(layer2, [-1, 7*7*64])
+fc = tf.reshape(layer2, [-1, (ImageSize//4)*(ImageSize//4)*64])
 
-wd1 = tf.Variable(tf.truncated_normal([7 * 7 * 64, 1000], stddev=0.3), name='wd1')
+wd1 = tf.Variable(tf.truncated_normal([(ImageSize//4)*(ImageSize//4) * 64, 1000], stddev=0.3), name='wd1')
 bd1 = tf.Variable(tf.truncated_normal([1000], stddev=0.01), name='bd1')
 
 wd2 = tf.Variable(tf.truncated_normal([1000, n_classes], stddev=0.3), name='wd2')

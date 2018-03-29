@@ -16,6 +16,7 @@ directions = {'l':0,'lu':0,'u':0,'ru':0,'r':0,'rd':0,'d':0,'ld':0,'c':0}
 
 running = True
 #up down left right
+ImageSize = 100
 ofs = 20
 def main():
 	global running, screen
@@ -26,8 +27,8 @@ def main():
 	faceCascade = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 #------------------------------------
 	n_classes = 9
-	x = tf.placeholder(tf.float32, [None, 28*28])
-	x_shaped = tf.reshape(x, [-1, 28, 28, 1])
+	x = tf.placeholder(tf.float32, [None, ImageSize*ImageSize])
+	x_shaped = tf.reshape(x, [-1, ImageSize, ImageSize, 1])
 
 	def create_new_conv_layer(input_data, num_input_channels, num_filters, filter_shape, pool_shape, name):
 	    # setup the filter input shape for tf.nn.conv_2d
@@ -50,9 +51,9 @@ def main():
 
 	layer1 = create_new_conv_layer(x_shaped, 1, 32, [5, 5], [2, 2], name='layer1')
 	layer2 = create_new_conv_layer(layer1, 32, 64, [5, 5], [2, 2], name='layer2')
-	fc = tf.reshape(layer2, [-1, 7*7*64])
+	fc = tf.reshape(layer2, [-1, (ImageSize//4)*(ImageSize//4)*64])
 
-	wd1 = tf.Variable(tf.truncated_normal([7 * 7 * 64, 1000], stddev=0.3), name='wd1')
+	wd1 = tf.Variable(tf.truncated_normal([(ImageSize//4)*(ImageSize//4) * 64, 1000], stddev=0.3), name='wd1')
 	bd1 = tf.Variable(tf.truncated_normal([1000], stddev=0.01), name='bd1')
 
 	wd2 = tf.Variable(tf.truncated_normal([1000, n_classes], stddev=0.3), name='wd2')
@@ -93,8 +94,8 @@ def main():
 			for (xx, y, w, h) in faces:
 				cv2.rectangle(frame, (xx, y), (xx+w, y+h), (0, 255, 0), 2)
 				gray = gray[y+10:y+h-10, xx+10:xx+w-10]
-				gray = np.array(cv2.resize(gray,(28,28))).flatten()
-				img = np.zeros((1,28*28),dtype=np.float32)
+				gray = np.array(cv2.resize(gray,(ImageSize,ImageSize))).flatten()
+				img = np.zeros((1,ImageSize*ImageSize),dtype=np.float32)
 				img[0,:] = gray[:]
 				prediction = sess.run(predict, {x: img})
 				#print(prediction)
